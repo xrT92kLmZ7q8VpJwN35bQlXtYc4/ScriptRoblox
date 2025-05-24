@@ -1,7 +1,6 @@
 
 @echo off
 title Executor Downloader Menu
-color 0A
 start "" "https://discord.gg/hu9eq8yxZT"
 :MENU
 cls
