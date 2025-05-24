@@ -1,1 +1,61 @@
 
+@echo off
+title Executor Downloader Menu
+color 0A
+start "" "https://discord.gg/hu9eq8yxZT"
+:MENU
+cls
+echo ================================
+echo         EXECUTOR MENU
+echo ================================
+echo [1] Download Volcano Executor
+echo [2] Download Xeno Executor
+echo [3] Download Swift Executor
+echo [0] Exit
+echo ================================
+set /p choice=Enter your choice: 
+
+if "%choice%"=="1" goto DOWNLOAD_VOLCANO
+if "%choice%"=="2" goto DOWNLOAD_XENO
+if "%choice%"=="3" goto DOWNLOAD_SWIFT
+if "%choice%"=="0" exit
+goto MENU
+
+:LOADING
+setlocal EnableDelayedExpansion
+cls
+echo Downloading, please wait...
+set "spinner=|/-\"
+for /L %%n in (1,1,15) do (
+    set /a i=%%n %% 4
+    set "char=!spinner:~%i%,1!"
+    <nul set /p=Loading !char!   
+    ping -n 1 localhost >nul
+    <nul set /p=
+)
+endlocal
+cls
+goto :eof
+
+:DOWNLOAD_VOLCANO
+call :LOADING
+powershell -Command "Invoke-WebRequest -Uri 'https://download-orcin.vercel.app/VolcanoUpdater.exe' -OutFile 'VolcanoUpdater.exe'"
+echo Volcano Executor downloaded.
+pause
+goto MENU
+
+:DOWNLOAD_XENO
+call :LOADING
+:: Replace with actual link
+powershell -Command "Invoke-WebRequest -Uri 'https://example.com/XenoExecutor.exe' -OutFile 'XenoExecutor.exe'"
+echo Xeno Executor downloaded.
+pause
+goto MENU
+
+:DOWNLOAD_SWIFT
+call :LOADING
+:: Replace with actual link
+powershell -Command "Invoke-WebRequest -Uri 'https://example.com/SwiftExecutor.exe' -OutFile 'SwiftExecutor.exe'"
+echo Swift Executor downloaded.
+pause
+goto MENU
