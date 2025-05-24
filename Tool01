@@ -7,7 +7,6 @@ cls
 echo ================================
 echo         EXECUTOR MENU
 echo ================================
-echo [1] Download Volcano Executor
 echo [2] Download Xeno Executor
 echo [3] Download Swift Executor
 echo [0] Exit
