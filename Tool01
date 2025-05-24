@@ -1,12 +1,14 @@
 
 @echo off
 title Executor Downloader Menu
+color 0A
 start "" "https://discord.gg/hu9eq8yxZT"
 :MENU
 cls
 echo ================================
 echo         EXECUTOR MENU
 echo ================================
+echo [1] Download Volcano Executor
 echo [2] Download Xeno Executor
 echo [3] Download Swift Executor
 echo [0] Exit
