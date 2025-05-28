@@ -1,22 +1,15 @@
-_G.getenv = _G.getenv or {}
-_G.getenv.key = ""
+-- NyricXKeySystem.lua
+local NyricXKeySystem = {}
+NyricXKeySystem.__index = NyricXKeySystem
 
-local key24hours = {
-
-}
-local keyweek = {
-
-}
-local keymonth = {
-
-}
-local keyboost = {
-
-}
-local getKeyLink = ""
+-- Services
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+local player = Players.LocalPlayer
 
 -- Theme
-local theme = {
+local defaultTheme = {
     background = Color3.fromRGB(20, 20, 20),
     backgroundGradientStart = Color3.fromRGB(40, 40, 40),
     backgroundGradientEnd = Color3.fromRGB(10, 10, 10),
@@ -27,38 +20,163 @@ local theme = {
     secondaryButtonHover = Color3.fromRGB(200, 80, 0),
     closeButton = Color3.fromRGB(180, 0, 0),
     closeButtonHover = Color3.fromRGB(200, 0, 0),
+    tutorialButton = Color3.fromRGB(0, 120, 180),
+    tutorialButtonHover = Color3.fromRGB(0, 140, 200),
 }
 
-local keys = {}
-for _, key in ipairs(key24hours) do table.insert(keys, {key = key, duration = 86400, type = "24h"}) end
-for _, key in ipairs(keyweek) do table.insert(keys, {key = key, duration = 604800, type = "week"}) end
-for _, key in ipairs(keymonth) do table.insert(keys, {key = key, duration = 2592000, type = "month"}) end
-for _, key in ipairs(keyboost) do table.insert(keys, {key = key, duration = 99999999999999, type = "boost"}) end
-
--- Services
-local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
+-- Tween Info
 local tweenInfoQuadOut = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local tweenInfoQuadIn = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 local tweenInfoBackOut = TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local tweenInfoShake = TweenInfo.new(0.05, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
 
--- Create ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "NyricXHubUI"
-screenGui.IgnoreGuiInset = true
-screenGui.Parent = game.CoreGui
-screenGui.ResetOnSpawn = false
+-- Initialize key storage
+local keys = {}
+local getKeyLink = ""
 
-local function createToast(message, color, duration)
+-- Create Window
+function NyricXKeySystem:CreateWindow(config)
+    local self = setmetatable({}, NyricXKeySystem)
+    self.Title = config.Title or "NyricX Hub - Key System"
+    self.Center = config.Center or true
+    self.Acrylic = config.Acrylic or false
+    self.Theme = config.Theme or "Dark"
+    self.getenv = config.getenv or false
+    self.Buttons = {}
+    self.Keys = { key24hours = {}, keyweek = {}, keymonth = {}, keyboost = {} }
+    self.KeyTimes = { key24hours = 24 * 60 * 60, keyweek = 7 * 24 * 60 * 60, keymonth = 30 * 24 * 60 * 60, keyboost = 99999999999999 }
+    self.getKeyLink = ""
+
+    -- Create ScreenGui
+    self.ScreenGui = Instance.new("ScreenGui")
+    self.ScreenGui.Name = "NyricXKeySystemUI"
+    self.ScreenGui.IgnoreGuiInset = true
+    self.ScreenGui.ResetOnSpawn = false
+    self.ScreenGui.Parent = game.CoreGui
+
+    -- Create Main Frame
+    self.MainFrame = Instance.new("Frame")
+    self.MainFrame.Size = UDim2.new(0, 600, 0, 300)
+    self.MainFrame.Position = selfწ
+
+System: UDim2.new(0.5, -300, 1, 0)
+    self.MainFrame.BackgroundColor3 = defaultTheme.background
+    self.MainFrame.BackgroundTransparency = 0.1
+    self.MainFrame.Parent = self.ScreenGui
+
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(0, 20)
+    uiCorner.Parent = self.MainFrame
+
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new(defaultTheme.backgroundGradientStart, defaultTheme.backgroundGradientEnd)
+    gradient.Rotation = 45
+    gradient.Parent = self.MainFrame
+
+    if self.Center then
+        TweenService:Create(self.MainFrame, tweenInfoBackOut, {Position = UDim2.new(0.5, -300, 0.5, -150)}):Play()
+    else
+        TweenService:Create(self.MainFrame, tweenInfoBackOut, {Position = UDim2.new(0.5, -300, 0, 20)}):Play()
+    end
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(0, 300, 0, 40)
+    titleLabel.Position = UDim2.new(0.5, -150, 0, 20)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = self.Title
+    titleLabel.TextColor3 = defaultTheme.text
+    titleLabel.Font = Enum.Font.FredokaOne
+    titleLabel.TextSize = 28
+    titleLabel.TextScaled = true
+    titleLabel.TextWrapped = true
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+    titleLabel.Parent = self.MainFrame
+
+    local icon = Instance.new("ImageLabel")
+    icon.Size = UDim2.new(0, 120, 0, 120)
+    icon.Position = UDim2.new(0, 30, 0, 80)
+    icon.BackgroundTransparency = 1
+    icon.Image = "rbxassetid://91324246097383"
+    icon.Parent = self.MainFrame
+
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Size = UDim2.new(0, 350, 0, 30)
+    keyLabel.Position = UDim2.new(0, 180, 0, 70)
+    keyLabel.BackgroundTransparency = 1
+    keyLabel.Text = "Input Your Key"
+    keyLabel.TextColor3 = defaultTheme.text
+    keyLabel.Font = Enum.Font.GothamBold
+    keyLabel.TextSize = 20
+    keyLabel.TextXAlignment = Enum.TextXAlignment.Left
+    keyLabel.Parent = self.MainFrame
+
+    self.TextBox = Instance.new("TextBox")
+    self.TextBox.Size = UDim2.new(0, 350, 0, 40)
+    self.TextBox.Position = UDim2.new(0, 180, 0, 100)
+    self.TextBox.PlaceholderText = "Input Your Key"
+    self.TextBox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
+    self.TextBox.Font = Enum.Font.GothamBold
+    self.TextBox.BackgroundColor3 = defaultTheme.background:lerp(Color3.fromRGB(0, 0, 0), 0.1)
+    self.TextBox.BackgroundTransparency = 0.3
+    self.TextBox.TextColor3 = defaultTheme.text
+    self.TextBox.Text = ""
+    self.TextBox.TextScaled = true
+    self.TextBox.TextWrapped = true
+    self.TextBox.ClipsDescendants = true
+    self.TextBox.Parent = self.MainFrame
+
+    local textBoxPadding = Instance.new("UIPadding")
+    textBoxPadding.PaddingLeft = UDim.new(0, 10)
+    textBoxPadding.PaddingRight = UDim.new(0, 10)
+    textBoxPadding.Parent = self.TextBox
+
+    local textBoxCorner = Instance.new("UICorner")
+    textBoxCorner.CornerRadius = UDim.new(0, 20)
+    textBoxCorner.Parent = self.TextBox
+
+    if self.getenv and _G.getenv and _G.getenv.key then
+        self.TextBox.Text = _G.getenv.key
+    end
+
+    self.StatusLabel = Instance.new("TextLabel")
+    self.StatusLabel.Size = UDim2.new(0, 350, 0, 25)
+    self.StatusLabel.Position = UDim2.new(0, 180, 0, 150)
+    self.StatusLabel.BackgroundTransparency = 1
+    self.StatusLabel.Text = "Ready to validate..."
+    self.StatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    self.StatusLabel.Font = Enum.Font.Gotham
+    self.StatusLabel.TextSize = 14
+    self.StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    self.StatusLabel.Parent = self.MainFrame
+
+    self.LoadingSpinner = Instance.new("ImageLabel")
+    self.LoadingSpinner.Size = UDim2.new(0, 25, 0, 25)
+    self.LoadingSpinner.Position = UDim2.new(0.5, -12, 0.5, -12)
+    self.LoadingSpinner.BackgroundTransparency = 1
+    self.LoadingSpinner.Image = "rbxassetid://7712218325"
+    self.LoadingSpinner.ImageColor3 = defaultTheme.text
+    self.LoadingSpinner.Visible = false
+    self.LoadingSpinner.Parent = self.MainFrame
+
+    self.RotationTween = TweenService:Create(self.LoadingSpinner, TweenInfo.new(0.8, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {Rotation = 360})
+
+    -- Anti-AFK
+    player.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+
+    return self
+end
+
+-- Create Notification
+function NyricXKeySystem:CreateNotification(config)
     local toastFrame = Instance.new("Frame")
     toastFrame.Size = UDim2.new(0, 300, 0, 50)
     toastFrame.Position = UDim2.new(0.5, -150, 0, -50)
-    toastFrame.BackgroundColor3 = theme.background
+    toastFrame.BackgroundColor3 = defaultTheme.background
     toastFrame.BackgroundTransparency = 0.2
-    toastFrame.Parent = screenGui
+    toastFrame.Parent = self.ScreenGui
 
     local toastCorner = Instance.new("UICorner")
     toastCorner.CornerRadius = UDim.new(0, 20)
@@ -69,7 +187,7 @@ local function createToast(message, color, duration)
     checkmark.Position = UDim2.new(0, 10, 0.5, -15)
     checkmark.BackgroundTransparency = 1
     checkmark.Image = "rbxassetid://7712218325"
-    checkmark.ImageColor3 = color
+    checkmark.ImageColor3 = config.Color or Color3.fromRGB(0, 255, 127)
     checkmark.ImageTransparency = 1
     checkmark.Parent = toastFrame
 
@@ -77,8 +195,8 @@ local function createToast(message, color, duration)
     toastText.Size = UDim2.new(1, -50, 1, 0)
     toastText.Position = UDim2.new(0, 50, 0, 0)
     toastText.BackgroundTransparency = 1
-    toastText.Text = message
-    toastText.TextColor3 = theme.text
+    toastText.Text = config.Content or config.Title
+    toastText.TextColor3 = defaultTheme.text
     toastText.Font = Enum.Font.GothamBold
     toastText.TextSize = 14
     toastText.TextWrapped = true
@@ -91,7 +209,7 @@ local function createToast(message, color, duration)
     TweenService:Create(toastText, tweenInfoQuadOut, {TextTransparency = 0}):Play()
 
     task.spawn(function()
-        task.wait(duration or 2)
+        task.wait(config.Duration or 2)
         TweenService:Create(toastFrame, tweenInfoQuadIn, {BackgroundTransparency = 0.2, Position = UDim2.new(0.5, -150, 0, -50)}):Play()
         TweenService:Create(checkmark, tweenInfoQuadIn, {ImageTransparency = 1}):Play()
         TweenService:Create(toastText, tweenInfoQuadIn, {TextTransparency = 1}):Play()
@@ -100,27 +218,13 @@ local function createToast(message, color, duration)
     end)
 end
 
-local function createLoadingSpinner(parent)
-    local spinner = Instance.new("ImageLabel")
-    spinner.Size = UDim2.new(0, 25, 0, 25)
-    spinner.Position = UDim2.new(0.5, -12, 0.5, -12)
-    spinner.BackgroundTransparency = 1
-    spinner.Image = "rbxassetid://7712218325"
-    spinner.ImageColor3 = theme.text
-    spinner.Visible = false
-    spinner.Parent = parent
-
-    local rotationTween = TweenService:Create(spinner, TweenInfo.new(0.8, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {Rotation = 360})
-    return spinner, rotationTween
-end
-
--- Error animation
-local function createErrorEffect()
+-- Create Error Effect
+function NyricXKeySystem:CreateErrorEffect()
     local errorFrame = Instance.new("Frame")
     errorFrame.Size = UDim2.new(1, 0, 1, 0)
     errorFrame.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     errorFrame.BackgroundTransparency = 1
-    errorFrame.Parent = screenGui
+    errorFrame.Parent = self.ScreenGui
 
     TweenService:Create(errorFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundTransparency = 0.8}):Play()
     task.wait(0.2)
@@ -129,301 +233,131 @@ local function createErrorEffect()
     errorFrame:Destroy()
 end
 
--- Load main hub UI
-local function loadMainHubUI()
-    local success, result = pcall(function()
-        local url = ""
-        local response = game:HttpGet(url)
-        if response and response ~= "" then
-            local func, err = loadstring(response)
-            if func then
-                return func()
-            else
-                error("Failed to compile fetched script: " .. tostring(err))
-            end
-        else
-            error("Failed to fetch script: Empty response from " .. url)
-        end
-    end)
+-- Create Button
+function NyricXKeySystem:CreateButton(config)
+    local buttonName = config.Title:gsub("%s+", ""):lower()
+    local buttonColor = defaultTheme.button
+    local buttonHoverColor = defaultTheme.buttonHover
 
-    if not success then
-        warn("Failed to load NyricX Hub: " .. tostring(result))
-        createToast("Failed to load NyricX Hub: " .. tostring(result), Color3.fromRGB(255, 50, 50), 5)
-        createErrorEffect()
-        return false
+    if buttonName == "getkey" then
+        buttonColor = defaultTheme.secondaryButton
+        buttonHoverColor = defaultTheme.secondaryButtonHover
+    elseif buttonName == "closeui" then
+        buttonColor = defaultTheme.closeButton
+        buttonHoverColor = defaultTheme.closeButtonHover
+    elseif buttonName == "tutorial" then
+        buttonColor = defaultTheme.tutorialButton
+        buttonHoverColor = defaultTheme.tutorialButtonHover
     end
-    return true
-end
-local function checkKeyValidity()
-    return false
-end
 
--- Get Key UI
-local function showGetKeyUI()
-    local getKeyScreenGui = Instance.new("ScreenGui")
-    getKeyScreenGui.Name = "GetKeyUI"
-    getKeyScreenGui.Parent = game.CoreGui
-    getKeyScreenGui.ResetOnSpawn = false
-
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 300, 0, 150)
-    frame.Position = UDim2.new(0.5, -150, 0.5, -75)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    frame.Parent = getKeyScreenGui
-
-    local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0, 10)
-    uiCorner.Parent = frame
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 30)
-    titleLabel.Position = UDim2.new(0, 0, 0, 10)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "Get Your Key"
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 20
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Center
-    titleLabel.Parent = frame
-
-    local getKeyButton = Instance.new("TextButton")
-    getKeyButton.Size = UDim2.new(0, 200, 0, 50)
-    getKeyButton.Position = UDim2.new(0.5, -100, 0.5, 0)
-    getKeyButton.Text = "Copy Key Link"
-    getKeyButton.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
-    getKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    getKeyButton.Font = Enum.Font.GothamBold
-    getKeyButton.TextSize = 18
-    getKeyButton.Parent = frame
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, buttonName == "tutorial" and 110 or 100, 0, 35)
+    button.Position = UDim2.new(0, buttonName == "submitkey" and 180 or buttonName == "getkey" and 290 or buttonName == "tutorial" and 400 or 290, 0, buttonName == "closeui" and 235 or 190)
+    button.Text = config.Title
+    button.BackgroundColor3 = buttonColor
+    button.BackgroundTransparency = 0.2
+    button.TextSize = 16
+    button.Font = Enum.Font.GothamBold
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Parent = self.MainFrame
 
     local buttonCorner = Instance.new("UICorner")
-    buttonCorner.CornerRadius = UDim.new(0, 10)
-    buttonCorner.Parent = getKeyButton
+    buttonCorner.CornerRadius = UDim.new(0, 15)
+    buttonCorner.Parent = button
 
-    getKeyButton.MouseButton1Click:Connect(function()
-        local success, err = pcall(function()
-            setclipboard(getKeyLink)
-        end)
-        if success then
-            createToast("Key Link Copied Successfully", Color3.fromRGB(0, 255, 127), 2)
-        else
-            warn("Failed to copy key link: " .. tostring(err))
-            createToast("Failed to Copy Key Link", Color3.fromRGB(255, 50, 50), 3)
-        end
-    end)
-
-    local closeButton = Instance.new("TextButton")
-    closeButton.Size = UDim2.new(0, 30, 0, 30)
-    closeButton.Position = UDim2.new(1, -40, 0, 10)
-    closeButton.Text = "X"
-    closeButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.Font = Enum.Font.GothamBold
-    closeButton.TextSize = 18
-    closeButton.Parent = frame
-
-    local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, 5)
-    closeCorner.Parent = closeButton
-
-    closeButton.MouseButton1Click:Connect(function()
-        getKeyScreenGui:Destroy()
-    end)
-end
-
-local function createMainFrame()
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 600, 0, 300)
-    frame.Position = UDim2.new(0.5, -300, 1, 0)
-    frame.BackgroundColor3 = theme.background
-    frame.BackgroundTransparency = 0.1
-    frame.Parent = screenGui
-
-    local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0, 20)
-    uiCorner.Parent = frame
-
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new(theme.backgroundGradientStart, theme.backgroundGradientEnd)
-    gradient.Rotation = 45
-    gradient.Parent = frame
-
-    TweenService:Create(frame, tweenInfoBackOut, {Position = UDim2.new(0.5, -300, 0.5, -150)}):Play()
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(0, 300, 0, 40)
-    titleLabel.Position = UDim2.new(0.5, -150, 0, 20)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "NyricX Hub"
-    titleLabel.TextColor3 = theme.text
-    titleLabel.Font = Enum.Font.FredokaOne
-    titleLabel.TextSize = 28
-    titleLabel.TextScaled = true
-    titleLabel.TextWrapped = true
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Center
-    titleLabel.Parent = frame
-
-    local icon = Instance.new("ImageLabel")
-    icon.Size = UDim2.new(0, 120, 0, 120)
-    icon.Position = UDim2.new(0, 30, 0, 80)
-    icon.BackgroundTransparency = 1
-    icon.Image = "rbxassetid://91324246097383"
-    icon.Parent = frame
-
-    local keyLabel = Instance.new("TextLabel")
-    keyLabel.Size = UDim2.new(0, 350, 0, 30)
-    keyLabel.Position = UDim2.new(0, 180, 0, 70)
-    keyLabel.BackgroundTransparency = 1
-    keyLabel.Text = "Input Key"
-    keyLabel.TextColor3 = theme.text
-    keyLabel.Font = Enum.Font.GothamBold
-    keyLabel.TextSize = 20
-    keyLabel.TextXAlignment = Enum.TextXAlignment.Left
-    keyLabel.Parent = frame
-
-    local textBox = Instance.new("TextBox")
-    textBox.Size = UDim2.new(0, 350, 0, 40)
-    textBox.Position = UDim2.new(0, 180, 0, 100)
-    textBox.PlaceholderText = "Input Key"
-    textBox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
-    textBox.Font = Enum.Font.GothamBold
-    textBox.BackgroundColor3 = theme.background:lerp(Color3.fromRGB(0, 0, 0), 0.1)
-    textBox.BackgroundTransparency = 0.3
-    textBox.TextColor3 = theme.text
-    textBox.Text = ""
-    textBox.TextScaled = true
-    textBox.TextWrapped = true
-    textBox.ClipsDescendants = true
-    textBox.Parent = frame
-
-    local textBoxPadding = Instance.new("UIPadding")
-    textBoxPadding.PaddingLeft = UDim.new(0, 10)
-    textBoxPadding.PaddingRight = UDim.new(0, 10)
-    textBoxPadding.Parent = textBox
-
-    local textBoxCorner = Instance.new("UICorner")
-    textBoxCorner.CornerRadius = UDim.new(0, 20)
-    textBoxCorner.Parent = textBox
-
-    local envKey = _G.getenv and _G.getenv.key or ""
-    if envKey ~= "" then
-        textBox.Text = envKey
+    if buttonName == "tutorial" then
+        local tutorialsIcon = Instance.new("ImageLabel")
+        tutorialsIcon.Size = UDim2.new(0, 25, 0, 25)
+        tutorialsIcon.Position = UDim2.new(0, 5, 0.5, -12)
+        tutorialsIcon.BackgroundTransparency = 1
+        tutorialsIcon.Image = "rbxassetid://91324246097383"
+        tutorialsIcon.ImageColor3 = defaultTheme.text
+        tutorialsIcon.Parent = button
     end
 
-    local statusLabel = Instance.new("TextLabel")
-    statusLabel.Size = UDim2.new(0, 350, 0, 25)
-    statusLabel.Position = UDim2.new(0, 180, 0, 150)
-    statusLabel.BackgroundTransparency = 1
-    statusLabel.Text = "Ready to validate..."
-    statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-    statusLabel.Font = Enum.Font.Gotham
-    statusLabel.TextSize = 14
-    statusLabel.TextXAlignment = Enum.TextXAlignment.Left
-    statusLabel.Parent = frame
-
-    local submitButton = Instance.new("TextButton")
-    submitButton.Size = UDim2.new(0, 120, 0, 40)
-    submitButton.Position = UDim2.new(0, 180, 0, 185)
-    submitButton.Text = "Submit"
-    submitButton.BackgroundColor3 = theme.button
-    submitButton.BackgroundTransparency = 0.2
-    submitButton.TextSize = 18
-    submitButton.Font = Enum.Font.GothamBold
-    submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    submitButton.Parent = frame
-
-    local submitButtonCorner = Instance.new("UICorner")
-    submitButtonCorner.CornerRadius = UDim.new(0, 20)
-    submitButtonCorner.Parent = submitButton
-
-    submitButton.MouseEnter:Connect(function()
-        TweenService:Create(submitButton, tweenInfoQuadOut, {BackgroundColor3 = theme.buttonHover, BackgroundTransparency = 0, Size = UDim2.new(0, 125, 0, 45)}):Play()
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, tweenInfoQuadOut, {BackgroundColor3 = buttonHoverColor, BackgroundTransparency = 0, Size = UDim2.new(0, buttonName == "tutorial" and 115 or 105, 0, 40)}):Play()
     end)
 
-    submitButton.MouseLeave:Connect(function()
-        TweenService:Create(submitButton, tweenInfoQuadOut, {BackgroundColor3 = theme.button, BackgroundTransparency = 0.2, Size = UDim2.new(0, 120, 0, 40)}):Play()
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, tweenInfoQuadOut, {BackgroundColor3 = buttonColor, BackgroundTransparency = 0.2, Size = UDim2.new(0, buttonName == "tutorial" and 110 or 100, 0, 35)}):Play()
     end)
 
-    submitButton.MouseButton1Down:Connect(function()
-        TweenService:Create(submitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 115, 0, 35)}):Play()
+    button.MouseButton1Down:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, buttonName == "tutorial" and 105 or 95, 0, 30)}):Play()
     end)
 
-    submitButton.MouseButton1Up:Connect(function()
-        TweenService:Create(submitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 120, 0, 40)}):Play()
+    button.MouseButton1Up:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, buttonName == "tutorial" and 110 or 100, 0, 35)}):Play()
     end)
 
-    local getKeyButton = Instance.new("TextButton")
-    getKeyButton.Size = UDim2.new(0, 120, 0, 40)
-    getKeyButton.Position = UDim2.new(0, 310, 0, 185)
-    getKeyButton.Text = "Get Key"
-    getKeyButton.BackgroundColor3 = theme.secondaryButton
-    getKeyButton.BackgroundTransparency = 0.2
-    getKeyButton.TextSize = 18
-    getKeyButton.Font = Enum.Font.GothamBold
-    getKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    getKeyButton.Parent = frame
+    if config.Callback then
+        button.MouseButton1Click:Connect(config.Callback)
+    elseif buttonName == "submitkey" then
+        button.MouseButton1Click:Connect(function()
+            self:SubmitKey()
+        end)
+        self.TextBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                self:SubmitKey()
+            end
+        end)
+    elseif buttonName == "getkey" then
+        button.MouseButton1Click:Connect(function()
+            local success, err = pcall(function()
+                setclipboard(self.getKeyLink)
+            end)
+            if success then
+                self:CreateNotification({
+                    Title = "Key Link Copied",
+                    Content = "Key Link Copied Successfully",
+                    Color = Color3.fromRGB(0, 255, 127),
+                    Duration = 2
+                })
+            else
+                warn("Failed to copy key link: " .. tostring(err))
+                self:CreateNotification({
+                    Title = "Copy Failed",
+                    Content = "Failed to Copy Key Link",
+                    Color = Color3.fromRGB(255, 50, 50),
+                    Duration = 3
+                })
+            end
+        end)
+    elseif buttonName == "closeui" then
+        button.MouseButton1Click:Connect(function()
+            TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, 620, 0, 320)}):Play()
+            task.wait(0.3)
+            self.ScreenGui:Destroy()
+        end)
+    end
 
-    local getKeyButtonCorner = Instance.new("UICorner")
-    getKeyButtonCorner.CornerRadius = UDim.new(0, 20)
-    getKeyButtonCorner.Parent = getKeyButton
-
-    getKeyButton.MouseEnter:Connect(function()
-        TweenService:Create(getKeyButton, tweenInfoQuadOut, {BackgroundColor3 = theme.secondaryButtonHover, BackgroundTransparency = 0, Size = UDim2.new(0, 125, 0, 45)}):Play()
-    end)
-
-    getKeyButton.MouseLeave:Connect(function()
-        TweenService:Create(getKeyButton, tweenInfoQuadOut, {BackgroundColor3 = theme.secondaryButton, BackgroundTransparency = 0.2, Size = UDim2.new(0, 120, 0, 40)}):Play()
-    end)
-
-    getKeyButton.MouseButton1Down:Connect(function()
-        TweenService:Create(getKeyButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 115, 0, 35)}):Play()
-    end)
-
-    getKeyButton.MouseButton1Up:Connect(function()
-        TweenService:Create(getKeyButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 120, 0, 40)}):Play()
-    end)
-
-    getKeyButton.MouseButton1Click:Connect(function()
-        showGetKeyUI()
-    end)
-
-    local closeButton = Instance.new("TextButton")
-    closeButton.Size = UDim2.new(0, 120, 0, 40)
-    closeButton.Position = UDim2.new(0, 245, 0, 235)
-    closeButton.Text = "Close"
-    closeButton.BackgroundColor3 = theme.closeButton
-    closeButton.BackgroundTransparency = 0.2
-    closeButton.TextSize = 18
-    closeButton.Font = Enum.Font.GothamBold
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.Parent = frame
-
-    local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, 20)
-    closeCorner.Parent = closeButton
-
-    closeButton.MouseButton1Click:Connect(function()
-        TweenService:Create(frame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, 620, 0, 320)}):Play()
-        task.wait(0.3)
-        screenGui:Destroy()
-    end)
-
-    return frame, textBox, submitButton, statusLabel
+    self.Buttons[buttonName] = button
+    return button
 end
 
-if checkKeyValidity() then return end
+-- Add Keys
+function NyricXKeySystem:AddKeys(keyType, keyList)
+    self.Keys[keyType] = keyList
+    for _, key in ipairs(keyList) do
+        table.insert(keys, {key = key, duration = self.KeyTimes[keyType], type = keyType})
+    end
+end
 
-local mainFrame, textBox, submitButton, statusLabel = createMainFrame()
-local loadingSpinner, rotationTween = createLoadingSpinner(mainFrame)
+-- Set Key Link
+function NyricXKeySystem:SetKeyLink(link)
+    self.getKeyLink = link
+end
 
-local function submitKey()
-    local inputKey = textBox.Text
+-- Submit Key
+function NyricXKeySystem:SubmitKey()
+    local inputKey = self.TextBox.Text
     local keyInfo = nil
 
-    statusLabel.Text = "Validating key..."
-    statusLabel.TextColor3 = Color3.fromRGB(100, 100, 255)
-    loadingSpinner.Visible = true
-    rotationTween:Play()
+    self.StatusLabel.Text = "Validating key..."
+    self.StatusLabel.TextColor3 = Color3.fromRGB(100, 100, 255)
+    self.LoadingSpinner.Visible = true
+    self.RotationTween:Play()
 
     for _, validKey in ipairs(keys) do
         if inputKey == validKey.key then
@@ -432,56 +366,63 @@ local function submitKey()
         end
     end
 
-    loadingSpinner.Visible = false
-    rotationTween:Pause()
+    self.LoadingSpinner.Visible = false
+    self.RotationTween:Pause()
 
     if keyInfo then
         local durationText
-        if keyInfo.type == "24h" then
+        if keyInfo.type == "key24hours" then
             durationText = "24 hours"
-        elseif keyInfo.type == "week" then
+        elseif keyInfo.type == "keyweek" then
             durationText = "1 week"
-        elseif keyInfo.type == "month" then
+        elseif keyInfo.type == "keymonth" then
             durationText = "1 month"
-        elseif keyInfo.type == "boost" then
+        elseif keyInfo.type == "keyboost" then
             durationText = "unlimited time (Boost)"
         end
 
-        statusLabel.Text = "Key Verified! (" .. keyInfo.type .. ")"
-        statusLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
-        createToast("Key Verified! Access granted for " .. durationText .. "!", Color3.fromRGB(0, 255, 127), 3)
+        self.StatusLabel.Text = "Key Verified! (" .. keyInfo.type .. ")"
+        self.StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
+        self:CreateNotification({
+            Title = "Key Verified",
+            Content = "Key Verified! Access granted for " .. durationText .. "!",
+            Color = Color3.fromRGB(0, 255, 127),
+            Duration = 3
+        })
 
-        TweenService:Create(mainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, 620, 0, 320)}):Play()
+        TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, 620, 0, 320)}):Play()
         task.wait(0.5)
-        mainFrame.Visible = false
+        self.MainFrame.Visible = false
 
         task.wait(0.5)
-        screenGui:Destroy()
-        local loaded = loadMainHubUI()
-        if not loaded then
-            createToast("Error loading hub. Please try again.", Color3.fromRGB(255, 50, 50), 5)
+        self.ScreenGui:Destroy()
+        local success, result = pcall(function()
+            return loadstring(game:HttpGet("https://raw.githubusercontent.com/xyrixreal/NyricXHub/refs/heads/main/NyricX"))()
+        end)
+        if not success or not result then
+            self:CreateNotification({
+                Title = "Hub Load Error",
+                Content = "Error loading hub. Please try again.",
+                Color = Color3.fromRGB(255, 50, 50),
+                Duration = 5
+            })
         end
     else
-        statusLabel.Text = "Invalid Key! Try Again."
-        statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-        createToast("Invalid Key! Try Again.", Color3.fromRGB(255, 50, 50), 2)
-        createErrorEffect()
+        self.StatusLabel.Text = "Invalid Key! Try Again."
+        self.StatusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+        self:CreateNotification({
+            Title = "Invalid Key",
+            Content = "Invalid Key! Try Again.",
+            Color = Color3.fromRGB(255, 50, 50),
+            Duration = 2
+        })
+        self:CreateErrorEffect()
 
         for i = 1, 4 do
-            TweenService:Create(mainFrame, tweenInfoShake, {Position = UDim2.new(0.5, -300 + math.random(-8, 8), 0.5, -150)}):Play()
+            TweenService:Create(self.MainFrame, tweenInfoShake, {Position = UDim2.new(0.5, -300 + math.random(-8, 8), 0.5, -150)}):Play()
             task.wait(0.05)
         end
     end
 end
 
-submitButton.MouseButton1Click:Connect(submitKey)
-textBox.FocusLost:Connect(function(enterPressed) if enterPressed then submitKey() end end)
-
-if textBox.Text ~= "" then
-    submitKey()
-end
-local virtualUser = game:GetService("VirtualUser")
-player.Idled:Connect(function()
-    virtualUser:CaptureController()
-    virtualUser:ClickButton2(Vector2.new())
-end)
+return NyricXKeySystem
