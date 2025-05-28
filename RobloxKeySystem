@@ -213,6 +213,14 @@ function NyricXKeySystem:CreateWindow(config)
     return self
 end
 
+-- Get Input (using the TextBox since Roblox lacks native input dialogs)
+function NyricXKeySystem:GetInput(prompt)
+    -- Update the placeholder text to show the prompt
+    self.TextBox.PlaceholderText = prompt
+    -- Return the current text in the TextBox (caller should handle timing)
+    return self.TextBox.Text
+end
+
 -- Create Notification
 function NyricXKeySystem:CreateNotification(config)
     local toastFrame = Instance.new("Frame")
@@ -337,43 +345,6 @@ function NyricXKeySystem:CreateButton(config)
 
     if config.Callback then
         button.MouseButton1Click:Connect(config.Callback)
-    elseif buttonName == "submitkey" then
-        button.MouseButton1Click:Connect(function()
-            self:SubmitKey()
-        end)
-        self.TextBox.FocusLost:Connect(function(enterPressed)
-            if enterPressed then
-                self:SubmitKey()
-            end
-        end)
-    elseif buttonName == "getkey" then
-        button.MouseButton1Click:Connect(function()
-            local success, err = pcall(function()
-                setclipboard(self.getKeyLink)
-            end)
-            if success then
-                self:CreateNotification({
-                    Title = "Key Link Copied",
-                    Content = "Key Link Copied Successfully",
-                    Color = Color3.fromRGB(0, 255, 127),
-                    Duration = 2
-                })
-            else
-                warn("Failed to copy key link: " .. tostring(err))
-                self:CreateNotification({
-                    Title = "Copy Failed",
-                    Content = "Failed to Copy Key Link",
-                    Color = Color3.fromRGB(255, 50, 50),
-                    Duration = 3
-                })
-            end
-        end)
-    elseif buttonName == "closeui" then
-        button.MouseButton1Click:Connect(function()
-            TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, self.Size.X.Offset + 20, 0, self.Size.Y.Offset + 20)}):Play()
-            task.wait(0.3)
-            self.ScreenGui:Destroy()
-        end)
     end
 
     self.Buttons[buttonName] = button
@@ -393,16 +364,18 @@ function NyricXKeySystem:SetKeyLink(link)
     self.getKeyLink = link
 end
 
--- Submit Key
-function NyricXKeySystem:SubmitKey()
-    local inputKey = self.TextBox.Text
-    local keyInfo = nil
+-- Submit Key (Modified to return success and message)
+function NyricXKeySystem:SubmitKey(inputKey)
+    if not inputKey or inputKey == "" then
+        return false, "Key cannot be empty."
+    end
 
     self.StatusLabel.Text = "Validating key..."
     self.StatusLabel.TextColor3 = Color3.fromRGB(100, 100, 255)
     self.LoadingSpinner.Visible = true
     self.RotationTween:Play()
 
+    local keyInfo = nil
     for _, validKey in ipairs(keys) do
         if inputKey == validKey.key then
             keyInfo = validKey
@@ -427,46 +400,24 @@ function NyricXKeySystem:SubmitKey()
 
         self.StatusLabel.Text = "Key Verified! (" .. keyInfo.type .. ")"
         self.StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
-        self:CreateNotification({
-            Title = "Key Verified",
-            Content = "Key Verified! Access granted for " .. durationText .. "!",
-            Color = Color3.fromRGB(0, 255, 127),
-            Duration = 3
-        })
-
-        TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, self.Size.X.Offset + 20, 0, self.Size.Y.Offset + 20)}):Play()
-        task.wait(0.5)
-        self.MainFrame.Visible = false
-
-        task.wait(0.5)
-        self.ScreenGui:Destroy()
-        local success, result = pcall(function()
-            return loadstring(game:HttpGet("https://raw.githubusercontent.com/xyrixreal/NyricXHub/refs/heads/main/NyricX"))()
-        end)
-        if not success or not result then
-            self:CreateNotification({
-                Title = "Hub Load Error",
-                Content = "Error loading hub. Please try again. URL: https://raw.githubusercontent.com/xyrixreal/NyricXHub/refs/heads/main/NyricX",
-                Color = Color3.fromRGB(255, 50, 50),
-                Duration = 5
-            })
-        end
+        return true, "Access granted for " .. durationText .. "!"
     else
         self.StatusLabel.Text = "Invalid Key! Try Again."
         self.StatusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-        self:CreateNotification({
-            Title = "Invalid Key",
-            Content = "Invalid Key! Try Again.",
-            Color = Color3.fromRGB(255, 50, 50),
-            Duration = 2
-        })
         self:CreateErrorEffect()
-
         for i = 1, 4 do
             TweenService:Create(self.MainFrame, tweenInfoShake, {Position = UDim2.new(0.5, -self.Size.X.Offset / 2 + math.random(-8, 8), 0.5, -self.Size.Y.Offset / 2)}):Play()
             task.wait(0.05)
         end
+        return false, "Invalid key."
     end
+end
+
+-- Close the UI
+function NyricXKeySystem:Close()
+    TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, self.Size.X.Offset + 20, 0, self.Size.Y.Offset + 20)}):Play()
+    task.wait(0.3)
+    self.ScreenGui:Destroy()
 end
 
 return NyricXKeySystem
