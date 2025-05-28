@@ -215,9 +215,7 @@ end
 
 -- Get Input (using the TextBox since Roblox lacks native input dialogs)
 function NyricXKeySystem:GetInput(prompt)
-    -- Update the placeholder text to show the prompt
     self.TextBox.PlaceholderText = prompt
-    -- Return the current text in the TextBox (caller should handle timing)
     return self.TextBox.Text
 end
 
@@ -368,7 +366,7 @@ end
 function NyricXKeySystem:SubmitKey(inputKey)
     if not inputKey or inputKey == "" then
         return false, "Key cannot be empty."
-    end
+    }
 
     self.StatusLabel.Text = "Validating key..."
     self.StatusLabel.TextColor3 = Color3.fromRGB(100, 100, 255)
