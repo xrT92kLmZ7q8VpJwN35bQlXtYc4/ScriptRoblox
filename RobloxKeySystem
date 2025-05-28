@@ -446,7 +446,7 @@ function NyricXKeySystem:SubmitKey()
         if not success or not result then
             self:CreateNotification({
                 Title = "Hub Load Error",
-                Content = "Error loading hub. Please try again.",
+                Content = "Error loading hub. Please try again. URL: https://raw.githubusercontent.com/xyrixreal/NyricXHub/refs/heads/main/NyricX",
                 Color = Color3.fromRGB(255, 50, 50),
                 Duration = 5
             })
