@@ -8,20 +8,64 @@ local Players = game:GetService("Players")
 local VirtualUser = game:GetService("VirtualUser")
 local player = Players.LocalPlayer
 
--- Theme
-local defaultTheme = {
-    background = Color3.fromRGB(20, 20, 20),
-    backgroundGradientStart = Color3.fromRGB(40, 40, 40),
-    backgroundGradientEnd = Color3.fromRGB(10, 10, 10),
-    text = Color3.fromRGB(220, 220, 220),
-    button = Color3.fromRGB(0, 150, 0),
-    buttonHover = Color3.fromRGB(0, 170, 0),
-    secondaryButton = Color3.fromRGB(180, 70, 0),
-    secondaryButtonHover = Color3.fromRGB(200, 80, 0),
-    closeButton = Color3.fromRGB(180, 0, 0),
-    closeButtonHover = Color3.fromRGB(200, 0, 0),
-    tutorialButton = Color3.fromRGB(0, 120, 180),
-    tutorialButtonHover = Color3.fromRGB(0, 140, 200),
+-- Themes
+local themes = {
+    Dark = {
+        background = Color3.fromRGB(20, 20, 20),
+        backgroundGradientStart = Color3.fromRGB(40, 40, 40),
+        backgroundGradientEnd = Color3.fromRGB(10, 10, 10),
+        text = Color3.fromRGB(220, 220, 220),
+        button = Color3.fromRGB(0, 150, 0),
+        buttonHover = Color3.fromRGB(0, 170, 0),
+        secondaryButton = Color3.fromRGB(180, 70, 0),
+        secondaryButtonHover = Color3.fromRGB(200, 80, 0),
+        closeButton = Color3.fromRGB(180, 0, 0),
+        closeButtonHover = Color3.fromRGB(200, 0, 0),
+        tutorialButton = Color3.fromRGB(0, 120, 180),
+        tutorialButtonHover = Color3.fromRGB(0, 140, 200),
+    },
+    Darker = {
+        background = Color3.fromRGB(10, 10, 10),
+        backgroundGradientStart = Color3.fromRGB(30, 30, 30),
+        backgroundGradientEnd = Color3.fromRGB(5, 5, 5),
+        text = Color3.fromRGB(200, 200, 200),
+        button = Color3.fromRGB(0, 130, 0),
+        buttonHover = Color3.fromRGB(0, 150, 0),
+        secondaryButton = Color3.fromRGB(160, 50, 0),
+        secondaryButtonHover = Color3.fromRGB(180, 60, 0),
+        closeButton = Color3.fromRGB(150, 0, 0),
+        closeButtonHover = Color3.fromRGB(170, 0, 0),
+        tutorialButton = Color3.fromRGB(0, 100, 160),
+        tutorialButtonHover = Color3.fromRGB(0, 120, 180),
+    },
+    Light = {
+        background = Color3.fromRGB(240, 240, 240),
+        backgroundGradientStart = Color3.fromRGB(220, 220, 220),
+        backgroundGradientEnd = Color3.fromRGB(255, 255, 255),
+        text = Color3.fromRGB(40, 40, 40),
+        button = Color3.fromRGB(0, 120, 0),
+        buttonHover = Color3.fromRGB(0, 140, 0),
+        secondaryButton = Color3.fromRGB(150, 60, 0),
+        secondaryButtonHover = Color3.fromRGB(170, 70, 0),
+        closeButton = Color3.fromRGB(150, 0, 0),
+        closeButtonHover = Color3.fromRGB(170, 0, 0),
+        tutorialButton = Color3.fromRGB(0, 100, 150),
+        tutorialButtonHover = Color3.fromRGB(0, 120, 170),
+    },
+    Acrylic = {
+        background = Color3.fromRGB(20, 20, 20),
+        backgroundGradientStart = Color3.fromRGB(40, 40, 40),
+        backgroundGradientEnd = Color3.fromRGB(10, 10, 10),
+        text = Color3.fromRGB(220, 220, 220),
+        button = Color3.fromRGB(0, 150, 0),
+        buttonHover = Color3.fromRGB(0, 170, 0),
+        secondaryButton = Color3.fromRGB(180, 70, 0),
+        secondaryButtonHover = Color3.fromRGB(200, 80, 0),
+        closeButton = Color3.fromRGB(180, 0, 0),
+        closeButtonHover = Color3.fromRGB(200, 0, 0),
+        tutorialButton = Color3.fromRGB(0, 120, 180),
+        tutorialButtonHover = Color3.fromRGB(0, 140, 200),
+    },
 }
 
 -- Tween Info
@@ -40,7 +84,9 @@ function NyricXKeySystem:CreateWindow(config)
     self.Title = config.Title or "NyricX Hub - Key System"
     self.Center = config.Center or true
     self.Acrylic = config.Acrylic or false
-    self.Theme = config.Theme or "Dark"
+    self.Theme = themes[config.Theme] or themes["Dark"]
+    self.Size = config.Size or UDim2.new(0, 600, 0, 300)
+    self.Icon = config.Icon or "rbxassetid://91324246097383"
     self.getenv = config.getenv or false
     self.Buttons = {}
     self.Keys = { key24hours = {}, keyweek = {}, keymonth = {}, keyboost = {} }
@@ -56,11 +102,9 @@ function NyricXKeySystem:CreateWindow(config)
 
     -- Create Main Frame
     self.MainFrame = Instance.new("Frame")
-    self.MainFrame.Size = UDim2.new(0, 600, 0, 300)
-    self.MainFrame.Position = selfწ
-
-System: UDim2.new(0.5, -300, 1, 0)
-    self.MainFrame.BackgroundColor3 = defaultTheme.background
+    self.MainFrame.Size = self.Size
+    self.MainFrame.Position = UDim2.new(0.5, -self.Size.X.Offset / 2, self.Center and 0.5 or 1, self.Center and -self.Size.Y.Offset / 2 or 0)
+    self.MainFrame.BackgroundColor3 = self.Theme.background
     self.MainFrame.BackgroundTransparency = 0.1
     self.MainFrame.Parent = self.ScreenGui
 
@@ -69,22 +113,22 @@ System: UDim2.new(0.5, -300, 1, 0)
     uiCorner.Parent = self.MainFrame
 
     local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new(defaultTheme.backgroundGradientStart, defaultTheme.backgroundGradientEnd)
+    gradient.Color = ColorSequence.new(self.Theme.backgroundGradientStart, self.Theme.backgroundGradientEnd)
     gradient.Rotation = 45
     gradient.Parent = self.MainFrame
 
     if self.Center then
-        TweenService:Create(self.MainFrame, tweenInfoBackOut, {Position = UDim2.new(0.5, -300, 0.5, -150)}):Play()
+        TweenService:Create(self.MainFrame, tweenInfoBackOut, {Position = UDim2.new(0.5, -self.Size.X.Offset / 2, 0.5, -self.Size.Y.Offset / 2)}):Play()
     else
-        TweenService:Create(self.MainFrame, tweenInfoBackOut, {Position = UDim2.new(0.5, -300, 0, 20)}):Play()
+        TweenService:Create(self.MainFrame, tweenInfoBackOut, {Position = UDim2.new(0.5, -self.Size.X.Offset / 2, 0, 20)}):Play()
     end
 
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(0, 300, 0, 40)
-    titleLabel.Position = UDim2.new(0.5, -150, 0, 20)
+    titleLabel.Size = UDim2.new(0, self.Size.X.Offset * 0.8, 0, 40)
+    titleLabel.Position = UDim2.new(0.5, -self.Size.X.Offset * 0.4, 0, 20)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = self.Title
-    titleLabel.TextColor3 = defaultTheme.text
+    titleLabel.TextColor3 = self.Theme.text
     titleLabel.Font = Enum.Font.FredokaOne
     titleLabel.TextSize = 28
     titleLabel.TextScaled = true
@@ -93,32 +137,32 @@ System: UDim2.new(0.5, -300, 1, 0)
     titleLabel.Parent = self.MainFrame
 
     local icon = Instance.new("ImageLabel")
-    icon.Size = UDim2.new(0, 120, 0, 120)
+    icon.Size = UDim2.new(0, self.Size.X.Offset * 0.2, 0, self.Size.Y.Offset * 0.4)
     icon.Position = UDim2.new(0, 30, 0, 80)
     icon.BackgroundTransparency = 1
-    icon.Image = "rbxassetid://91324246097383"
+    icon.Image = self.Icon
     icon.Parent = self.MainFrame
 
     local keyLabel = Instance.new("TextLabel")
-    keyLabel.Size = UDim2.new(0, 350, 0, 30)
-    keyLabel.Position = UDim2.new(0, 180, 0, 70)
+    keyLabel.Size = UDim2.new(0, self.Size.X.Offset * 0.7, 0, 30)
+    keyLabel.Position = UDim2.new(0, self.Size.X.Offset * 0.3, 0, 70)
     keyLabel.BackgroundTransparency = 1
     keyLabel.Text = "Input Your Key"
-    keyLabel.TextColor3 = defaultTheme.text
+    keyLabel.TextColor3 = self.Theme.text
     keyLabel.Font = Enum.Font.GothamBold
     keyLabel.TextSize = 20
     keyLabel.TextXAlignment = Enum.TextXAlignment.Left
     keyLabel.Parent = self.MainFrame
 
     self.TextBox = Instance.new("TextBox")
-    self.TextBox.Size = UDim2.new(0, 350, 0, 40)
-    self.TextBox.Position = UDim2.new(0, 180, 0, 100)
+    self.TextBox.Size = UDim2.new(0, self.Size.X.Offset * 0.7, 0, 40)
+    self.TextBox.Position = UDim2.new(0, self.Size.X.Offset * 0.3, 0, 100)
     self.TextBox.PlaceholderText = "Input Your Key"
-    self.TextBox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
+    self.TextBox.PlaceholderColor3 = self.Theme.text:Lerp(Color3.new(0, 0, 0), 0.2)
     self.TextBox.Font = Enum.Font.GothamBold
-    self.TextBox.BackgroundColor3 = defaultTheme.background:lerp(Color3.fromRGB(0, 0, 0), 0.1)
+    self.TextBox.BackgroundColor3 = self.Theme.background:Lerp(Color3.new(0, 0, 0), 0.1)
     self.TextBox.BackgroundTransparency = 0.3
-    self.TextBox.TextColor3 = defaultTheme.text
+    self.TextBox.TextColor3 = self.Theme.text
     self.TextBox.Text = ""
     self.TextBox.TextScaled = true
     self.TextBox.TextWrapped = true
@@ -139,11 +183,11 @@ System: UDim2.new(0.5, -300, 1, 0)
     end
 
     self.StatusLabel = Instance.new("TextLabel")
-    self.StatusLabel.Size = UDim2.new(0, 350, 0, 25)
-    self.StatusLabel.Position = UDim2.new(0, 180, 0, 150)
+    self.StatusLabel.Size = UDim2.new(0, self.Size.X.Offset * 0.7, 0, 25)
+    self.StatusLabel.Position = UDim2.new(0, self.Size.X.Offset * 0.3, 0, 150)
     self.StatusLabel.BackgroundTransparency = 1
     self.StatusLabel.Text = "Ready to validate..."
-    self.StatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    self.StatusLabel.TextColor3 = self.Theme.text:Lerp(Color3.new(0, 0, 0), 0.3)
     self.StatusLabel.Font = Enum.Font.Gotham
     self.StatusLabel.TextSize = 14
     self.StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -154,7 +198,7 @@ System: UDim2.new(0.5, -300, 1, 0)
     self.LoadingSpinner.Position = UDim2.new(0.5, -12, 0.5, -12)
     self.LoadingSpinner.BackgroundTransparency = 1
     self.LoadingSpinner.Image = "rbxassetid://7712218325"
-    self.LoadingSpinner.ImageColor3 = defaultTheme.text
+    self.LoadingSpinner.ImageColor3 = self.Theme.text
     self.LoadingSpinner.Visible = false
     self.LoadingSpinner.Parent = self.MainFrame
 
@@ -174,7 +218,7 @@ function NyricXKeySystem:CreateNotification(config)
     local toastFrame = Instance.new("Frame")
     toastFrame.Size = UDim2.new(0, 300, 0, 50)
     toastFrame.Position = UDim2.new(0.5, -150, 0, -50)
-    toastFrame.BackgroundColor3 = defaultTheme.background
+    toastFrame.BackgroundColor3 = self.Theme.background
     toastFrame.BackgroundTransparency = 0.2
     toastFrame.Parent = self.ScreenGui
 
@@ -196,7 +240,7 @@ function NyricXKeySystem:CreateNotification(config)
     toastText.Position = UDim2.new(0, 50, 0, 0)
     toastText.BackgroundTransparency = 1
     toastText.Text = config.Content or config.Title
-    toastText.TextColor3 = defaultTheme.text
+    toastText.TextColor3 = self.Theme.text
     toastText.Font = Enum.Font.GothamBold
     toastText.TextSize = 14
     toastText.TextWrapped = true
@@ -236,23 +280,23 @@ end
 -- Create Button
 function NyricXKeySystem:CreateButton(config)
     local buttonName = config.Title:gsub("%s+", ""):lower()
-    local buttonColor = defaultTheme.button
-    local buttonHoverColor = defaultTheme.buttonHover
+    local buttonColor = self.Theme.button
+    local buttonHoverColor = self.Theme.buttonHover
 
     if buttonName == "getkey" then
-        buttonColor = defaultTheme.secondaryButton
-        buttonHoverColor = defaultTheme.secondaryButtonHover
+        buttonColor = self.Theme.secondaryButton
+        buttonHoverColor = self.Theme.secondaryButtonHover
     elseif buttonName == "closeui" then
-        buttonColor = defaultTheme.closeButton
-        buttonHoverColor = defaultTheme.closeButtonHover
+        buttonColor = self.Theme.closeButton
+        buttonHoverColor = self.Theme.closeButtonHover
     elseif buttonName == "tutorial" then
-        buttonColor = defaultTheme.tutorialButton
-        buttonHoverColor = defaultTheme.tutorialButtonHover
+        buttonColor = self.Theme.tutorialButton
+        buttonHoverColor = self.Theme.tutorialButtonHover
     end
 
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, buttonName == "tutorial" and 110 or 100, 0, 35)
-    button.Position = UDim2.new(0, buttonName == "submitkey" and 180 or buttonName == "getkey" and 290 or buttonName == "tutorial" and 400 or 290, 0, buttonName == "closeui" and 235 or 190)
+    button.Size = UDim2.new(0, buttonName == "tutorial" and self.Size.X.Offset * 0.275 or self.Size.X.Offset * 0.25, 0, self.Size.Y.Offset * 0.1167)
+    button.Position = UDim2.new(0, buttonName == "submitkey" and self.Size.X.Offset * 0.45 or buttonName == "getkey" and self.Size.X.Offset * 0.725 or buttonName == "tutorial" and self.Size.X.Offset * 1 or self.Size.X.Offset * 0.725, 0, buttonName == "closeui" and self.Size.Y.Offset * 0.783 or self.Size.Y.Offset * 0.633)
     button.Text = config.Title
     button.BackgroundColor3 = buttonColor
     button.BackgroundTransparency = 0.2
@@ -267,28 +311,28 @@ function NyricXKeySystem:CreateButton(config)
 
     if buttonName == "tutorial" then
         local tutorialsIcon = Instance.new("ImageLabel")
-        tutorialsIcon.Size = UDim2.new(0, 25, 0, 25)
-        tutorialsIcon.Position = UDim2.new(0, 5, 0.5, -12)
+        tutorialsIcon.Size = UDim2.new(0, self.Size.X.Offset * 0.0625, 0, self.Size.Y.Offset * 0.0833)
+        tutorialsIcon.Position = UDim2.new(0, self.Size.X.Offset * 0.0125, 0.5, -self.Size.Y.Offset * 0.0417)
         tutorialsIcon.BackgroundTransparency = 1
-        tutorialsIcon.Image = "rbxassetid://91324246097383"
-        tutorialsIcon.ImageColor3 = defaultTheme.text
+        tutorialsIcon.Image = self.Icon
+        tutorialsIcon.ImageColor3 = self.Theme.text
         tutorialsIcon.Parent = button
     end
 
     button.MouseEnter:Connect(function()
-        TweenService:Create(button, tweenInfoQuadOut, {BackgroundColor3 = buttonHoverColor, BackgroundTransparency = 0, Size = UDim2.new(0, buttonName == "tutorial" and 115 or 105, 0, 40)}):Play()
+        TweenService:Create(button, tweenInfoQuadOut, {BackgroundColor3 = buttonHoverColor, BackgroundTransparency = 0, Size = UDim2.new(0, buttonName == "tutorial" and self.Size.X.Offset * 0.2875 or self.Size.X.Offset * 0.2625, 0, self.Size.Y.Offset * 0.1333)}):Play()
     end)
 
     button.MouseLeave:Connect(function()
-        TweenService:Create(button, tweenInfoQuadOut, {BackgroundColor3 = buttonColor, BackgroundTransparency = 0.2, Size = UDim2.new(0, buttonName == "tutorial" and 110 or 100, 0, 35)}):Play()
+        TweenService:Create(button, tweenInfoQuadOut, {BackgroundColor3 = buttonColor, BackgroundTransparency = 0.2, Size = UDim2.new(0, buttonName == "tutorial" and self.Size.X.Offset * 0.275 or self.Size.X.Offset * 0.25, 0, self.Size.Y.Offset * 0.1167)}):Play()
     end)
 
     button.MouseButton1Down:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, buttonName == "tutorial" and 105 or 95, 0, 30)}):Play()
+        TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, buttonName == "tutorial" and self.Size.X.Offset * 0.2625 or self.Size.X.Offset * 0.2375, 0, self.Size.Y.Offset * 0.1)}):Play()
     end)
 
     button.MouseButton1Up:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, buttonName == "tutorial" and 110 or 100, 0, 35)}):Play()
+        TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, buttonName == "tutorial" and self.Size.X.Offset * 0.275 or self.Size.X.Offset * 0.25, 0, self.Size.Y.Offset * 0.1167)}):Play()
     end)
 
     if config.Callback then
@@ -326,7 +370,7 @@ function NyricXKeySystem:CreateButton(config)
         end)
     elseif buttonName == "closeui" then
         button.MouseButton1Click:Connect(function()
-            TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, 620, 0, 320)}):Play()
+            TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, self.Size.X.Offset + 20, 0, self.Size.Y.Offset + 20)}):Play()
             task.wait(0.3)
             self.ScreenGui:Destroy()
         end)
@@ -390,7 +434,7 @@ function NyricXKeySystem:SubmitKey()
             Duration = 3
         })
 
-        TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, 620, 0, 320)}):Play()
+        TweenService:Create(self.MainFrame, tweenInfoQuadIn, {BackgroundTransparency = 1, Size = UDim2.new(0, self.Size.X.Offset + 20, 0, self.Size.Y.Offset + 20)}):Play()
         task.wait(0.5)
         self.MainFrame.Visible = false
 
@@ -419,7 +463,7 @@ function NyricXKeySystem:SubmitKey()
         self:CreateErrorEffect()
 
         for i = 1, 4 do
-            TweenService:Create(self.MainFrame, tweenInfoShake, {Position = UDim2.new(0.5, -300 + math.random(-8, 8), 0.5, -150)}):Play()
+            TweenService:Create(self.MainFrame, tweenInfoShake, {Position = UDim2.new(0.5, -self.Size.X.Offset / 2 + math.random(-8, 8), 0.5, -self.Size.Y.Offset / 2)}):Play()
             task.wait(0.05)
         end
     end
