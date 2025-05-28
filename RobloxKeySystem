@@ -362,52 +362,38 @@ function NyricXKeySystem:SetKeyLink(link)
     self.getKeyLink = link
 end
 
--- Submit Key (Modified to return success and message)
+-- Submit Key (Simplified to just validate and return URL content)
 function NyricXKeySystem:SubmitKey(inputKey)
     if not inputKey or inputKey == "" then
         return false, "Key cannot be empty."
-    }
+    end
 
-    self.StatusLabel.Text = "Validating key..."
+    self.StatusLabel.Text = "Fetching content..."
     self.StatusLabel.TextColor3 = Color3.fromRGB(100, 100, 255)
     self.LoadingSpinner.Visible = true
     self.RotationTween:Play()
 
-    local keyInfo = nil
-    for _, validKey in ipairs(keys) do
-        if inputKey == validKey.key then
-            keyInfo = validKey
-            break
-        end
-    end
+    -- Simulate fetching content (users can replace this with their own logic)
+    local success, content = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/xyrixreal/NyricXHub/refs/heads/main/NyricX")
+    end)
 
     self.LoadingSpinner.Visible = false
     self.RotationTween:Pause()
 
-    if keyInfo then
-        local durationText
-        if keyInfo.type == "key24hours" then
-            durationText = "24 hours"
-        elseif keyInfo.type == "keyweek" then
-            durationText = "1 week"
-        elseif keyInfo.type == "keymonth" then
-            durationText = "1 month"
-        elseif keyInfo.type == "keyboost" then
-            durationText = "unlimited time (Boost)"
-        end
-
-        self.StatusLabel.Text = "Key Verified! (" .. keyInfo.type .. ")"
+    if success and content and content ~= "" then
+        self.StatusLabel.Text = "Content fetched successfully!"
         self.StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
-        return true, "Access granted for " .. durationText .. "!"
+        return true, content -- Return the raw content for user to process
     else
-        self.StatusLabel.Text = "Invalid Key! Try Again."
+        self.StatusLabel.Text = "Failed to fetch content."
         self.StatusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
         self:CreateErrorEffect()
         for i = 1, 4 do
             TweenService:Create(self.MainFrame, tweenInfoShake, {Position = UDim2.new(0.5, -self.Size.X.Offset / 2 + math.random(-8, 8), 0.5, -self.Size.Y.Offset / 2)}):Play()
             task.wait(0.05)
         end
-        return false, "Invalid key."
+        return false, "Failed to fetch content: " .. (content or "Unknown error")
     end
 end
 
